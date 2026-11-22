@@ -280,189 +280,223 @@ def index():
 PAGE = r"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>BikeFlow AI | Beyond RMSE Decision Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+<script>if(window.tailwind)tailwind.config={theme:{extend:{fontFamily:{sans:['Fira Sans','system-ui','sans-serif'],mono:['Fira Code','ui-monospace','monospace']}}}}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<style>body{font-family:system-ui,sans-serif;background:#0f172a;color:#f8fafc}input[type=range]{accent-color:#38bdf8}
-.seg{font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#cbd5e1}
-.seg.on{background:#0284c7;border-color:#0284c7;color:#fff;font-weight:600}
-input[type=date]{color-scheme:dark}</style>
-</head><body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100">
-<header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-10">
-<div class="max-w-7xl mx-auto px-5 py-3 flex flex-wrap items-center justify-between gap-2">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-emerald-500 flex items-center justify-center font-extrabold text-white">BF</div>
-<div><h1 class="text-base font-bold text-white">BikeFlow AI <span class="text-emerald-400 text-xs">Beyond RMSE Cost-Sensitive Planner</span></h1>
-<p class="text-xs text-slate-400">XGBoost + Hour-of-Day Quantile Buffer • Chronological 70/15/15 Split</p></div></div>
-<div class="flex flex-wrap items-center gap-2">
-<div id="cityBtns" class="flex gap-1"><button type="button" data-v="dc" class="seg on">Washington, D.C.</button><button type="button" data-v="seoul" class="seg">Seoul</button></div>
-<span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full">● AWS EC2 Live</span></div>
+<style>
+:root{--bg:#0b1220;--card:#111a2b;--line:#1e293b;--line2:#273449;--txt:#e2e8f0;--mut:#94a3b8;--pri:#3b82f6;--plan:#10b981;--buf:#f59e0b;--act:#f43f5e}
+body{background:var(--bg);color:var(--txt);font-family:'Fira Sans',system-ui,sans-serif}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px}
+.num{font-family:'Fira Code',monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.seg{display:inline-flex;background:#0b1220;border:1px solid var(--line2);border-radius:8px;padding:2px}
+.seg button{font-size:12px;padding:6px 12px;border-radius:6px;color:#cbd5e1;white-space:nowrap;cursor:pointer;transition:background .2s,color .2s}
+.seg button:hover{color:#fff}
+.seg button.on{background:var(--pri);color:#fff;font-weight:600}
+.chip{font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid var(--line2);color:#cbd5e1;background:#0f172a;cursor:pointer;transition:border-color .2s,color .2s;white-space:nowrap}
+.chip:hover{border-color:var(--pri);color:#fff}
+.field{width:100%;background:#0b1220;border:1px solid var(--line2);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--txt)}
+input[type=range]{accent-color:var(--pri);width:100%;cursor:pointer}
+input[type=date]{color-scheme:dark}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.role{font-size:10.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--mut);white-space:nowrap}
+.role.base{border-color:#1d4ed8;color:#93c5fd}.role.prop{border-color:#047857;color:#6ee7b7}.role.rec{background:#064e3b;border-color:#059669;color:#a7f3d0}
+tbody tr{border-top:1px solid var(--line)}
+tbody tr:hover{background:#0f1a2e}
+.secnum{width:22px;height:22px;border-radius:6px;background:#1e293b;color:#cbd5e1;font-size:12px;display:inline-flex;align-items:center;justify-content:center;font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head><body class="min-h-screen">
+<header class="border-b border-slate-800 bg-[#0b1220]/90 backdrop-blur sticky top-0 z-20">
+<div class="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+ <div class="flex items-center gap-3">
+  <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center" aria-hidden="true">
+   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg></div>
+  <div><h1 class="text-[15px] font-semibold text-white leading-tight">BikeFlow AI</h1>
+   <p class="text-xs text-slate-400">Beyond RMSE: cost-aware hourly planning for bike-share operators</p></div></div>
+ <div class="flex flex-wrap items-center gap-3">
+  <div id="cityBtns" class="seg" role="group" aria-label="City"><button type="button" data-v="dc" class="on">Washington, D.C.</button><button type="button" data-v="seoul">Seoul</button></div>
+  <span class="flex items-center gap-1.5 text-xs text-slate-400"><span class="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true"></span>Live on AWS EC2</span></div>
 </div></header>
-<main class="max-w-7xl mx-auto px-5 py-4">
-<div class="mb-4 flex flex-wrap items-center gap-2">
-<span class="text-xs font-semibold text-slate-400 mr-1">Scenarios:</span>
-<button type="button" onclick="preset(3,17,1,1,26,50,12,5)" class="text-xs bg-slate-800 hover:bg-sky-600 border border-slate-700 px-3 py-1.5 rounded-lg transition">Rush Hour (17:00, r=5)</button>
-<button type="button" onclick="preset(3,8,1,1,22,60,10,10)" class="text-xs bg-slate-800 hover:bg-sky-600 border border-slate-700 px-3 py-1.5 rounded-lg transition">High Penalty (08:00, r=10)</button>
-<button type="button" onclick="preset(2,14,0,1,30,45,10,3)" class="text-xs bg-slate-800 hover:bg-sky-600 border border-slate-700 px-3 py-1.5 rounded-lg transition">Sunny Weekend (14:00, r=3)</button>
-<button type="button" onclick="preset(3,17,1,1,26,50,12,1)" class="text-xs bg-slate-800 hover:bg-sky-600 border border-slate-700 px-3 py-1.5 rounded-lg transition">Symmetric RMSE (r=1)</button>
-</div>
+
+<main class="max-w-7xl mx-auto px-6 py-6 space-y-8">
+
+<!-- key finding -->
+<section class="card px-5 py-4 flex flex-wrap items-center justify-between gap-4" aria-label="Key finding">
+ <div class="max-w-xl"><p class="eyebrow">Key finding</p>
+  <p class="text-lg text-white font-medium mt-1">Keep the most accurate model, and plan higher, hour by hour.</p>
+  <p class="text-sm text-slate-400 mt-1">Switching models by cost is unstable (r* moves between 0.5 and 4). An hour-of-day buffer, the r/(1+r) quantile of recent errors, cuts cost reliably with no retraining.</p></div>
+ <dl class="grid grid-cols-3 gap-6 text-center">
+  <div><dt class="text-xs text-slate-400">Cost at r = 5</dt><dd class="num text-2xl font-semibold text-emerald-400">−48.7%</dd><dd class="num text-xs text-slate-400">182.0 → 93.3</dd></div>
+  <div><dt class="text-xs text-slate-400">Rolling windows</dt><dd class="num text-2xl font-semibold text-emerald-400">−32–59%</dd><dd class="text-xs text-slate-400">5 of 5 periods</dd></div>
+  <div><dt class="text-xs text-slate-400">Seoul replication</dt><dd class="num text-2xl font-semibold text-emerald-400">−47%</dd><dd class="num text-xs text-slate-400">574.2 → 305.7</dd></div>
+ </dl></section>
+
+<!-- 1. plan -->
+<section aria-labelledby="s1">
+<div class="flex items-center gap-2 mb-3"><span class="secnum">1</span><h2 id="s1" class="text-base font-semibold text-white">Plan the next 24 hours</h2></div>
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-<div class="lg:col-span-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
-<div class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
-<div class="flex justify-between text-xs mb-1"><span class="font-bold text-emerald-300">Cost Ratio r (Cu / Co)</span><span id="rVal" class="font-extrabold text-emerald-400">r = 5.00</span></div>
-<input id="r_ratio" type="range" min="0.25" max="10" step="0.25" value="5" oninput="slide()" class="w-full cursor-pointer">
-<div id="alphaInfo" class="text-[11px] text-emerald-200/80 mt-1">Target Quantile α = r/(1+r) = 83.3% (Buffer Active)</div></div>
-<div class="grid grid-cols-2 gap-2">
-<div><label class="block text-[11px] text-slate-400 mb-1">Input mode</label><div id="modeBtns" class="flex gap-1">
-<button type="button" data-v="whatif" class="seg on">What-if</button><button type="button" data-v="replay" class="seg">Replay test day</button></div></div>
-<div id="baseBox"><label class="block text-[11px] text-slate-400 mb-1">Base forecast</label><div id="baseBtns" class="flex gap-1">
-<button type="button" data-v="train" class="seg on">XGBoost</button><button type="button" data-v="refit" class="seg">Refitted</button></div></div></div>
-<div id="replayBox" class="hidden"><label class="block text-[11px] text-slate-400 mb-1">Held-out test day (<span id="period"></span>)</label>
-<input id="date" type="date" onchange="run()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs"></div>
-<div id="whatifBox" class="space-y-3">
-<div class="grid grid-cols-3 gap-2">
-<div><label class="block text-[11px] text-slate-400 mb-1">Season</label>
-<select id="season" onchange="run()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs">
-<option value="1">Spring</option><option value="2">Summer</option><option value="3" selected>Fall</option><option value="4">Winter</option></select></div>
-<div><label class="block text-[11px] text-slate-400 mb-1">Day Type</label>
-<select id="workingday" onchange="run()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs">
-<option value="1" selected>Working</option><option value="0">Weekend</option></select></div>
-<div><label class="block text-[11px] text-slate-400 mb-1">Weather</label>
-<select id="weathersit" onchange="run()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs">
-<option value="1" selected>Clear</option><option value="2">Mist</option><option value="3">Rain</option><option value="4">Storm</option></select></div></div>
+ <div class="lg:col-span-4 card p-5 space-y-5">
+  <div>
+   <div class="flex items-baseline justify-between"><label for="r_ratio" class="text-sm font-medium text-white">Cost ratio r = C<sub>u</sub> / C<sub>o</sub></label><span id="rVal" class="num text-xl font-semibold text-blue-400">5.00</span></div>
+   <input id="r_ratio" type="range" min="0.25" max="10" step="0.25" value="5" oninput="slide()" class="mt-2" aria-describedby="alphaInfo">
+   <div class="flex justify-between text-[11px] text-slate-400 num"><span>0.25</span><span>1</span><span>5</span><span>10</span></div>
+   <p id="alphaInfo" class="text-xs text-slate-300 mt-2"></p></div>
+  <div><p class="eyebrow mb-2">Scenarios</p><div class="flex flex-wrap gap-2">
+   <button type="button" class="chip" onclick="preset(3,17,1,1,26,50,12,5)">Rush hour · 17:00 · r=5</button>
+   <button type="button" class="chip" onclick="preset(3,8,1,1,22,60,10,10)">High penalty · 08:00 · r=10</button>
+   <button type="button" class="chip" onclick="preset(2,14,0,1,30,45,10,3)">Weekend · 14:00 · r=3</button>
+   <button type="button" class="chip" onclick="preset(3,17,1,1,26,50,12,1)">Symmetric · r=1</button></div></div>
+  <div class="grid grid-cols-1 gap-3">
+   <div><p class="eyebrow mb-1.5">Input</p><div id="modeBtns" class="seg" role="group" aria-label="Input mode"><button type="button" data-v="whatif" class="on">What-if scenario</button><button type="button" data-v="replay">Replay a test day</button></div></div>
+   <div id="baseBox"><p class="eyebrow mb-1.5">Base forecast</p><div id="baseBtns" class="seg" role="group" aria-label="Base forecast"><button type="button" data-v="train" class="on">XGBoost</button><button type="button" data-v="refit">XGBoost refitted</button></div></div></div>
+  <div id="replayBox" class="hidden"><label for="date" class="eyebrow block mb-1.5">Held-out test day</label>
+   <input id="date" type="date" onchange="run()" class="field num"><p class="text-[11px] text-slate-400 mt-1">Test period: <span id="period" class="num"></span></p></div>
+  <div id="whatifBox" class="grid grid-cols-3 gap-2">
+   <div><label for="season" class="eyebrow block mb-1.5">Season</label><select id="season" onchange="run()" class="field"><option value="1">Spring</option><option value="2">Summer</option><option value="3" selected>Fall</option><option value="4">Winter</option></select></div>
+   <div><label for="workingday" class="eyebrow block mb-1.5">Day</label><select id="workingday" onchange="run()" class="field"><option value="1" selected>Working</option><option value="0">Weekend</option></select></div>
+   <div><label for="weathersit" class="eyebrow block mb-1.5">Weather</label><select id="weathersit" onchange="run()" class="field"><option value="1" selected>Clear</option><option value="2">Mist</option><option value="3">Rain</option><option value="4">Storm</option></select></div></div>
+  <div><div class="flex justify-between text-sm"><label for="hr">Hour of day</label><span id="hrVal" class="num font-medium text-white">17:00</span></div><input id="hr" type="range" min="0" max="23" value="17" oninput="slide()" class="mt-1"></div>
+  <div id="weatherBox" class="space-y-3">
+   <div><div class="flex justify-between text-sm"><label for="temp_c">Temperature</label><span id="tempVal" class="num text-white">26 °C</span></div><input id="temp_c" type="range" min="0" max="41" step="0.5" value="26" oninput="slide()" class="mt-1"></div>
+   <div><div class="flex justify-between text-sm"><label for="hum_pct">Humidity</label><span id="humVal" class="num text-white">50%</span></div><input id="hum_pct" type="range" min="0" max="100" value="50" oninput="slide()" class="mt-1"></div>
+   <div><div class="flex justify-between text-sm"><label for="wind_kmh">Wind speed</label><span id="windVal" class="num text-white">12 km/h</span></div><input id="wind_kmh" type="range" min="0" max="67" value="12" oninput="slide()" class="mt-1"></div>
+   <p class="text-[11px] text-slate-400">What-if uses a typical one-week lag (median by season, day type and hour): an illustration, not a forecast for a real date.</p></div>
+  <label class="flex items-start gap-2 text-xs text-slate-300 border-t border-slate-800 pt-4 cursor-pointer"><input id="rule" type="checkbox" checked onchange="run()" class="mt-0.5 accent-blue-500">
+   <span>Operator rule: keep XGBoost and add the hourly buffer only when r &gt; 1 (no retraining).</span></label>
+ </div>
+
+ <div class="lg:col-span-8 flex flex-col gap-5">
+  <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+   <div class="card p-4"><p id="lblBase" class="eyebrow">Forecast · 17:00</p><p class="mt-2"><span id="kBase" class="num text-3xl font-semibold text-blue-400">–</span> <span class="text-xs text-slate-400">rentals</span></p><p id="lblBaseSub" class="text-xs text-slate-400 mt-1">XGBoost mean forecast</p></div>
+   <div class="card p-4"><p class="eyebrow">Hourly buffer</p><p class="mt-2"><span id="kBuf" class="num text-3xl font-semibold text-amber-400">–</span> <span class="text-xs text-slate-400">rentals</span></p><p id="lblAlpha" class="text-xs text-slate-400 mt-1">–</p></div>
+   <div class="card p-4 border-emerald-700/60"><p class="eyebrow !text-emerald-300">Recommended plan</p><p class="mt-2"><span id="kPlan" class="num text-3xl font-semibold text-emerald-400">–</span> <span class="text-xs text-slate-400">rentals</span></p><p class="text-xs text-slate-400 mt-1">24-hour total <span id="kTot" class="num text-slate-200">–</span></p></div>
+   <div class="card p-4"><p id="lblSav" class="eyebrow">Cost cut</p><p class="mt-2"><span id="kSav" class="num text-3xl font-semibold text-white">–</span></p><p id="lblCostSub" class="num text-xs text-slate-400 mt-1">–</p></div>
+  </div>
+  <div class="card p-5 flex-1 flex flex-col">
+   <div class="flex flex-wrap items-start justify-between gap-2 mb-1"><div><h3 id="mainTitle" class="text-sm font-semibold text-white">Forecast vs. cost-optimal capacity plan</h3>
+    <p class="text-xs text-slate-400">Shaded band = hour-of-day buffer above the forecast</p></div>
+    <p id="dayStats" class="num text-xs text-slate-300"></p></div>
+   <div class="relative w-full flex-1 min-h-[18rem]"><canvas id="cMain" aria-label="24-hour forecast, plan and actual demand" role="img"></canvas></div></div>
+ </div></div></section>
+
+<!-- 2. evaluate -->
+<section aria-labelledby="s2">
+<div class="flex items-center gap-2 mb-3"><span class="secnum">2</span><h2 id="s2" class="text-base font-semibold text-white">Evaluate on held-out test hours</h2></div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+ <div class="lg:col-span-7 card p-5 overflow-x-auto">
+  <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3"><h3 class="text-sm font-semibold text-white">Asymmetric cost by plan <span id="tblR" class="num text-blue-400 font-medium"></span></h3><p id="tblSub" class="text-xs text-slate-400"></p></div>
+  <table class="w-full text-sm"><thead><tr class="text-[11px] uppercase tracking-wide text-slate-400"><th class="text-left font-semibold pb-2 whitespace-nowrap">Model / plan</th><th class="text-left font-semibold pb-2 whitespace-nowrap">Role</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap">RMSE</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap">AvgCost(r)</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap">vs XGBoost</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap peakCol">Peak under</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap">Coverage</th></tr></thead>
+  <tbody id="tbl"></tbody></table>
+  <p class="text-[11px] text-slate-400 mt-3 leading-relaxed">AvgCost(r) = mean of r × shortfall + surplus, in rentals. Coverage = share of test hours with plan ≥ demand (target r/(1+r)). Peak under = share of working-day 07, 08, 17, 18 h under-predicted. Arm B rows appear at r = 1, 2, 3, 5 and 10.</p></div>
+ <div class="lg:col-span-5 card p-5">
+  <div class="flex items-start justify-between gap-2 mb-2"><div><h3 id="subTitle" class="text-sm font-semibold text-white">Hour-of-day buffer</h3><p id="subDesc" class="text-xs text-slate-400">Rentals added per hour from validation-error quantiles</p></div>
+   <div id="subBtns" class="seg" role="group" aria-label="Chart"><button type="button" data-v="buf" class="on">Buffer</button><button type="button" data-v="imp">Features</button></div></div>
+  <div class="relative w-full h-64"><canvas id="cSub" role="img" aria-label="Hourly buffer or feature importance"></canvas></div></div>
+</div></section>
+
+<!-- 3. evidence -->
+<section aria-labelledby="s3">
+<div class="flex items-center gap-2 mb-3"><span class="secnum">3</span><h2 id="s3" class="text-base font-semibold text-white">Why not just switch models?</h2></div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+ <div class="card p-5"><h3 class="text-sm font-semibold text-white">Cost-sensitivity curve</h3><p id="curveNote" class="text-xs text-slate-400 mt-1 mb-3"></p>
+  <div class="relative w-full h-64"><canvas id="cCurve" role="img" aria-label="Average cost by model across cost ratios"></canvas></div></div>
+ <div class="card p-5"><h3 class="text-sm font-semibold text-white">When do real stations run empty?</h3>
+  <p class="text-xs text-slate-400 mt-1 mb-3">Live GBFS feed, 877 stations, 14–22 Nov 2026. On weekdays empty stations peak near 10:00, after the commute peaks (shaded): the buffer sets how much capacity, not where.</p>
+  <div class="relative w-full h-64"><canvas id="cGbfs" role="img" aria-label="Share of empty stations by hour"></canvas></div></div>
 </div>
-<div><div class="flex justify-between text-xs mb-0.5"><span>Hour of Day</span><span id="hrVal" class="font-bold text-sky-400">17:00</span></div>
-<input id="hr" type="range" min="0" max="23" value="17" oninput="slide()" class="w-full cursor-pointer"></div>
-<div id="weatherBox" class="space-y-3">
-<div><div class="flex justify-between text-xs mb-0.5"><span>Temperature</span><span id="tempVal" class="font-bold text-sky-400">26 °C</span></div>
-<input id="temp_c" type="range" min="0" max="41" step="0.5" value="26" oninput="slide()" class="w-full cursor-pointer"></div>
-<div><div class="flex justify-between text-xs mb-0.5"><span>Humidity</span><span id="humVal" class="font-bold text-sky-400">50%</span></div>
-<input id="hum_pct" type="range" min="0" max="100" value="50" oninput="slide()" class="w-full cursor-pointer"></div>
-<div><div class="flex justify-between text-xs mb-0.5"><span>Windspeed</span><span id="windVal" class="font-bold text-sky-400">12 km/h</span></div>
-<input id="wind_kmh" type="range" min="0" max="67" value="12" oninput="slide()" class="w-full cursor-pointer"></div>
-<p class="text-[10px] text-slate-500">What-if uses a typical one-week lag (median by season, day type and hour), so it illustrates the plan rather than forecasting a real date.</p></div>
-<label class="flex items-start gap-2 text-[11px] text-slate-400 bg-slate-800/70 p-2 rounded-lg border border-slate-700/60">
-<input id="rule" type="checkbox" checked onchange="run()" class="mt-0.5">Operator Rule: Keep XGBoost; add hourly buffer when r &gt; 1 (no retraining).</label></div>
-<div class="lg:col-span-8 flex flex-col gap-4">
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-<div id="lblBase" class="text-[11px] text-slate-400 uppercase">XGBoost (17:00)</div>
-<div class="mt-1 text-2xl font-extrabold text-sky-400"><span id="kBase">-</span> <span class="text-xs font-normal text-slate-400">rentals</span></div>
-<div id="lblBaseSub" class="mt-1 text-[11px] text-slate-400">Mean forecast</div></div>
-<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-<div class="text-[11px] text-slate-400 uppercase">Hourly Buffer</div>
-<div class="mt-1 text-2xl font-extrabold text-amber-400"><span id="kBuf">-</span> <span class="text-xs font-normal text-slate-400">rentals</span></div>
-<div id="lblAlpha" class="mt-1 text-[11px] text-amber-300/80">α = 83.3% quantile</div></div>
-<div class="bg-slate-900/80 border border-emerald-500/40 rounded-2xl p-3.5">
-<div class="text-[11px] text-emerald-300 uppercase font-semibold">Recommended Plan</div>
-<div class="mt-1 text-2xl font-extrabold text-emerald-400"><span id="kPlan">-</span> <span class="text-xs font-normal text-slate-400">rentals</span></div>
-<div class="mt-1 text-[11px] text-slate-400">24h: <span id="kTot">-</span></div></div>
-<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-<div id="lblSav" class="text-[11px] text-slate-400 uppercase">Cost Cut (r=5.0)</div>
-<div class="mt-1 text-2xl font-extrabold text-indigo-400"><span id="kSav">-</span>%</div>
-<div id="lblCostSub" class="mt-1 text-[11px] text-slate-400">-</div></div></div>
-<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex-1">
-<div class="flex flex-wrap justify-between gap-2"><h3 id="mainTitle" class="text-sm font-bold text-white mb-0.5">24-Hour Forecast vs. Cost-Optimal Capacity Plan</h3>
-<p id="dayStats" class="text-[11px] text-amber-300/90"></p></div>
-<p class="text-xs text-slate-400 mb-2">Green band = Hour-of-day safety buffer protecting rush-hour stockouts</p>
-<div class="relative w-full h-56"><canvas id="cMain"></canvas></div></div></div></div>
-<div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-5">
-<div class="lg:col-span-7 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 overflow-x-auto">
-<h3 class="text-sm font-bold text-white mb-0.5">Beyond RMSE: Test Evaluation (<span id="tblR">r = 5.00</span>)</h3>
-<p id="tblSub" class="text-xs text-slate-400 mb-2">2,562 held-out test hours • Live re-scored at selected r</p>
-<table class="w-full text-xs text-left">
-<thead><tr class="border-b border-slate-700 text-slate-400"><th class="py-1.5">Model / Plan</th><th>RMSE</th><th>AvgCost(r)</th><th>vs XGBoost</th><th class="peakCol">Peak Under%</th><th>Cov%</th></tr></thead>
-<tbody id="tbl" class="divide-y divide-slate-800"></tbody></table>
-<p class="text-[10px] text-slate-500 mt-2">AvgCost(r) = mean of r × shortfall + surplus (rentals). Cov% = test hours with plan ≥ demand (target r/(1+r)). Peak = working-day 07, 08, 17, 18 h. Arm B rows appear at r = 1, 2, 3, 5, 10 only.</p></div>
-<div class="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
-<div class="flex items-center justify-between mb-2">
-<div><h3 id="subTitle" class="text-sm font-bold text-white">Hour-of-Day Buffer Profile (Fig. 4.10)</h3>
-<p id="subDesc" class="text-xs text-slate-400">Extra rentals added per hour from validation quantiles</p></div>
-<button type="button" onclick="toggleSub()" id="subBtn" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1 rounded-lg">Feature Imp.</button></div>
-<div class="relative w-full h-56"><canvas id="cSub"></canvas></div></div></div>
-<div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-5">
-<div class="lg:col-span-6 bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
-<h3 class="text-sm font-bold text-white mb-0.5">Cost-Sensitivity Curve (Fig. 4.7)</h3>
-<p id="curveNote" class="text-xs text-slate-400 mb-2"></p>
-<div class="relative w-full h-56"><canvas id="cCurve"></canvas></div></div>
-<div class="lg:col-span-6 bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
-<h3 class="text-sm font-bold text-white mb-0.5">When Do Real Stations Run Empty? (GBFS, Fig. 4.11)</h3>
-<p class="text-xs text-slate-400 mb-2">877 Capital Bikeshare stations, 14–22 Nov 2026. Weekday empty share peaks near 10:00, after the commute peaks (shaded): the buffer sets how much capacity, not where.</p>
-<div class="relative w-full h-56"><canvas id="cGbfs"></canvas></div></div></div>
-<div class="mt-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 overflow-x-auto">
-<h3 class="text-sm font-bold text-white mb-0.5">Robustness: Five Rolling Test Windows at r = 5 (Table 4.5)</h3>
-<table class="w-full text-xs text-left mt-2"><thead><tr class="border-b border-slate-700 text-slate-400"><th class="py-1.5">Test window</th><th>Standard</th><th>Refitted</th><th>Re-ranked</th><th>Standard + buffer</th><th>vs standard</th><th>vs refitted</th></tr></thead>
-<tbody id="roll" class="divide-y divide-slate-800"></tbody></table>
-<p class="text-[10px] text-slate-500 mt-2">The buffer lowers cost in every window (32–59%) and beats the refitted model in four of five; in May–Jun refitting alone is cheaper. Seoul: no crossover; the buffer cuts XGBoost's cost by 47% at r = 5.</p></div>
-<footer class="text-[10px] text-slate-500 mt-4 pb-6 space-y-1">
-<p>Kobdej Manonai (st127172) & Lwin Moe Aung (st127370) • AST02.10 Computer Programming for Data Science and AI, AIT • Instructor: Dr. Chantri Polprasert</p>
-<p>Data: UCI Bike Sharing (Capital Bikeshare 2011–2012), UCI Seoul Bike Sharing Demand (2017–2018), Capital Bikeshare GBFS. The cost is a proxy: the data record rentals, not stockouts.</p></footer>
+<div class="card p-5 mt-5 overflow-x-auto">
+ <h3 class="text-sm font-semibold text-white">Robustness across five rolling test windows, r = 5</h3>
+ <p class="text-xs text-slate-400 mt-1 mb-3">Each window is trained on earlier data and tuned on the two months before it. Lower is better.</p>
+ <table class="w-full text-sm"><thead><tr class="text-[11px] uppercase tracking-wide text-slate-400"><th class="text-left font-semibold pb-2 whitespace-nowrap">Test window</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap">Standard</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap">Refitted</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap">Re-ranked</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap">Standard + buffer</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap">vs standard</th><th class="text-right font-semibold pb-2 pl-4 whitespace-nowrap">vs refitted</th></tr></thead>
+ <tbody id="roll"></tbody></table>
+ <p class="text-[11px] text-slate-400 mt-3">The buffer lowers cost in every window and beats the refitted model in four of five; in May–Jun, a period of fast growth, refitting alone is cheaper.</p></div>
+</section>
+
+<footer class="border-t border-slate-800 pt-4 pb-8 text-xs text-slate-400 flex flex-wrap justify-between gap-2">
+ <p>Kobdej Manonai (st127172) &amp; Lwin Moe Aung (st127370) · AST02.10 Computer Programming for Data Science and AI · Asian Institute of Technology · Instructor: Dr. Chantri Polprasert</p>
+ <p>Data: UCI Bike Sharing (2011–2012), UCI Seoul Bike Sharing (2017–2018), Capital Bikeshare GBFS. Cost is a proxy: data record rentals, not stockouts.</p></footer>
 </main>
+
 <script>
 const S = {{ static_json|safe }};
 const $=id=>document.getElementById(id), pad=n=>String(n).padStart(2,'0'), hrs=Array.from({length:24},(_,i)=>pad(i)+':00');
+const C={pri:'#3b82f6',plan:'#10b981',buf:'#f59e0b',act:'#f43f5e',grid:'#1e293b',tick:'#94a3b8',txt:'#cbd5e1'};
+Chart.defaults.font.family="'Fira Sans', system-ui, sans-serif";Chart.defaults.font.size=11;Chart.defaults.color=C.tick;Chart.defaults.borderColor=C.grid;
+Chart.defaults.plugins.legend.labels.boxWidth=10;Chart.defaults.plugins.legend.labels.boxHeight=10;Chart.defaults.plugins.legend.labels.color=C.txt;
+Chart.defaults.plugins.tooltip.backgroundColor='#0b1220';Chart.defaults.plugins.tooltip.borderColor='#334155';Chart.defaults.plugins.tooltip.borderWidth=1;
 const st={city:'dc',mode:'whatif',base:'train'};
-let tmr=null, mode='buf', curBuf=[], cSub=null, cCurve=null, last=null;
-const impL=S.importance.map(x=>x[0]), impV=S.importance.map(x=>x[1]);
-const tick={color:'#94a3b8',font:{size:10}};
+let tmr=null, sub='buf', curBuf=[], cSub=null, cCurve=null, last=null;
+const fmt=v=>v===null||v===undefined?'–':Math.round(v).toLocaleString();
 const cMain=new Chart($('cMain'),{type:'line',data:{labels:hrs,datasets:[
-{label:'Recommended Plan (+Buffer)',data:[],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.16)',borderWidth:2.5,borderDash:[5,4],fill:1,tension:0.35,pointRadius:2},
-{label:'XGBoost Forecast',data:[],borderColor:'#38bdf8',borderWidth:2.5,fill:false,tension:0.35,pointRadius:2},
-{label:'Actual Demand',data:[],borderColor:'#fbbf24',backgroundColor:'#fbbf24',showLine:false,pointRadius:3.5,hidden:true}
-]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#cbd5e1',boxWidth:12,font:{size:11}}}},scales:{x:{ticks:tick},y:{beginAtZero:true,ticks:tick}}}});
+ {label:'Recommended plan',data:[],borderColor:C.plan,backgroundColor:'rgba(16,185,129,0.14)',borderWidth:2,borderDash:[6,4],fill:1,tension:0.3,pointRadius:0},
+ {label:'XGBoost forecast',data:[],borderColor:C.pri,borderWidth:2.2,fill:false,tension:0.3,pointRadius:0},
+ {label:'Actual demand',data:[],borderColor:C.buf,backgroundColor:C.buf,showLine:false,pointRadius:3.5,hidden:true},
+ {label:'Selected hour',data:[],borderColor:C.act,backgroundColor:C.act,showLine:false,pointRadius:6,pointHoverRadius:7}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',align:'end'}},
+ scales:{x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:12}},y:{beginAtZero:true,title:{display:true,text:'rentals per hour'}}}}});
 function group(id,cb){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb(b.dataset.v);});}
 function setOn(id,v){document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
-function toggleSub(){mode=mode==='buf'?'imp':'buf';$('subBtn').innerText=mode==='buf'?'Feature Imp.':'Hourly Buffer';$('subTitle').innerText=mode==='buf'?'Hour-of-Day Buffer Profile (Fig. 4.10)':'XGBoost Feature Importance (%)';$('subDesc').innerText=mode==='buf'?'Extra rentals added per hour from validation quantiles':'Top predictors driving hourly demand (Washington, gain)';drawSub();}
-function drawSub(){if(cSub)cSub.destroy();const hr=+$('hr').value;cSub=new Chart($('cSub'),{type:'bar',data:{labels:mode==='buf'?hrs:impL,datasets:[{data:mode==='buf'?curBuf:impV,backgroundColor:mode==='buf'?hrs.map((_,i)=>i===hr?'#f43f5e':(last&&!last.rule_applied?'#475569':'#f59e0b')):'#6366f1',borderRadius:4}]},options:{indexAxis:mode==='buf'?'x':'y',responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:tick},y:{beginAtZero:mode!=='buf',ticks:tick}}}});}
-function sync(){const r=parseFloat($('r_ratio').value);$('rVal').innerText='r = '+r.toFixed(2);$('hrVal').innerText=pad($('hr').value)+':00';$('tempVal').innerText=$('temp_c').value+' °C';$('humVal').innerText=$('hum_pct').value+'%';$('windVal').innerText=$('wind_kmh').value+' km/h';}
+function drawSub(){if(cSub)cSub.destroy();const hr=+$('hr').value, isB=sub==='buf';
+ $('subTitle').innerText=isB?'Hour-of-day buffer':'XGBoost feature importance';$('subDesc').innerText=isB?(last&&!last.rule_applied?'Buffer the rule switches off at r ≤ 1 (shown in grey)':'Rentals added per hour from validation-error quantiles'):'Share of total gain, Washington model (%)';
+ cSub=new Chart($('cSub'),{type:'bar',data:{labels:isB?hrs:S.importance.map(x=>x[0]),datasets:[{data:isB?curBuf:S.importance.map(x=>x[1]),
+  backgroundColor:isB?hrs.map((_,i)=>i===hr?C.act:(last&&!last.rule_applied?'#475569':C.buf)):C.pri,borderRadius:3,maxBarThickness:28}]},
+  options:{indexAxis:isB?'x':'y',responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},
+  scales:{x:{grid:{display:!isB},ticks:isB?{maxRotation:0,autoSkip:true,maxTicksLimit:8}:{}},y:{grid:{display:isB},title:{display:isB,text:'rentals added'}}}}});}
+function sync(){const r=parseFloat($('r_ratio').value);$('rVal').innerText=r.toFixed(2);$('hrVal').innerText=pad($('hr').value)+':00';$('tempVal').innerText=$('temp_c').value+' °C';$('humVal').innerText=$('hum_pct').value+'%';$('windVal').innerText=$('wind_kmh').value+' km/h';}
 function slide(){sync();clearTimeout(tmr);tmr=setTimeout(run,80);}
 function preset(s,h,w,we,t,hu,wi,r){$('season').value=s;$('hr').value=h;$('workingday').value=w;$('weathersit').value=we;$('temp_c').value=t;$('hum_pct').value=hu;$('wind_kmh').value=wi;$('r_ratio').value=r;
  if(st.mode==='replay'&&st.city==='dc')$('date').value=w===0?'2012-10-13':'2012-10-10';sync();run();}
 function ui(){const c=S[st.city], seoul=st.city==='seoul';
  if(seoul){st.mode='replay';st.base='train';setOn('modeBtns','replay');setOn('baseBtns','train');}
- document.querySelector('#modeBtns [data-v=whatif]').classList.toggle('hidden',seoul);$('baseBox').classList.toggle('invisible',seoul);
+ document.querySelector('#modeBtns [data-v=whatif]').classList.toggle('hidden',seoul);$('baseBox').classList.toggle('hidden',seoul);
  $('replayBox').classList.toggle('hidden',st.mode!=='replay');$('whatifBox').classList.toggle('hidden',st.mode==='replay');$('weatherBox').classList.toggle('hidden',st.mode==='replay');
  $('period').innerText=c.test_period[0].slice(0,10)+' to '+c.test_period[1].slice(0,10);$('date').min=c.dates[0];$('date').max=c.dates[c.dates.length-1];
  if(!c.dates.includes($('date').value))$('date').value=seoul?'2018-10-10':'2012-10-10';
  document.querySelectorAll('.peakCol').forEach(e=>e.classList.toggle('hidden',seoul));drawCurve();}
+const roleCls={'Baseline':'base','Proposed':'prop','Recommended':'rec'};
 async function run(){
  const p={city:st.city,mode:st.mode,base:st.base,date:$('date').value,rule:$('rule').checked,season:$('season').value,hr:$('hr').value,workingday:$('workingday').value,weathersit:$('weathersit').value,temp_c:$('temp_c').value,hum_pct:$('hum_pct').value,wind_kmh:$('wind_kmh').value,r_ratio:$('r_ratio').value};
  const d=await(await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)})).json(); last=d;
- $('alphaInfo').innerText=!d.rule_applied?'r ≤ 1.0: Buffer Off (Use XGBoost Mean Forecast)':'Target Quantile α = r/(1+r) = '+d.alpha_pct+'% (Buffer Active)';
- $('lblBase').innerText=(d.base==='refit'?'Refitted XGBoost (':'XGBoost (')+pad(d.hr)+':00)';$('kBase').innerText=d.base_pred??'-';
- $('lblBaseSub').innerText=d.sel_actual!==null?'Actual demand: '+d.sel_actual.toLocaleString():'Mean forecast';
- $('kBuf').innerText=(d.buf_val>=0?'+':'')+d.buf_val;$('lblAlpha').innerText=!d.rule_applied?'Disabled (r ≤ 1)':'α = '+d.alpha_pct+'% quantile';
- $('kPlan').innerText=d.plan_pred??'-';$('kTot').innerText=d.plan_total.toLocaleString();
- $('lblSav').innerText='Cost Cut (r='+d.r.toFixed(1)+')';$('kSav').innerText=d.cost_cut;$('lblCostSub').innerText=d.xgb_cost.toFixed(1)+' → '+d.buf_cost.toFixed(1)+(d.base==='refit'?' (refit + buffer)':'');
- $('mainTitle').innerText=d.mode==='replay'?'24-Hour Plan vs. Actual Demand: '+(d.city==='dc'?'Washington, D.C., ':'Seoul, ')+d.date:'24-Hour Forecast vs. Cost-Optimal Capacity Plan';
- const ds=d.day;$('dayStats').innerText=ds.hours?`Day (${ds.hours} h): actual ${ds.actual.toLocaleString()} • shortfall ${ds.short_base.toLocaleString()} → ${ds.short_plan.toLocaleString()} • AvgCost ${ds.cost_base} → ${ds.cost_plan}`:'';
- cMain.data.datasets[0].data=d.plan_preds;cMain.data.datasets[1].data=d.base_preds;cMain.data.datasets[1].label=d.base==='refit'?'Refitted XGBoost Forecast':'XGBoost Forecast';
- cMain.data.datasets[2].data=d.actual;cMain.data.datasets[2].hidden=d.mode!=='replay';
- [0,1].forEach(k=>{cMain.data.datasets[k].pointRadius=hrs.map((_,i)=>i===d.hr?6:2);cMain.data.datasets[k].pointBackgroundColor=hrs.map((_,i)=>i===d.hr?'#f43f5e':(k===0?'#10b981':'#38bdf8'));});
- cMain.update('none');
- $('tblR').innerText='r = '+d.r.toFixed(2);$('tblSub').innerText=(d.city==='dc'?'2,562 held-out test hours (12 Sep–31 Dec 2012)':'1,204 held-out test hours (24 Sep–30 Nov 2018)')+' • Live re-scored at selected r';
- const prop=d.plan_name;
- $('tbl').innerHTML=d.table.map(x=>{const hl=x.name===prop, base=x.group==='Baseline';
-  const nc=hl?'text-emerald-400 font-bold':(base?'text-sky-400 font-medium':'text-slate-300');
-  const vs=x.vs_base===0?'—':(x.vs_base>0?'+':'')+x.vs_base.toFixed(1)+'%';
-  return `<tr class="${hl?'bg-emerald-950/30':''}"><td class="py-1.5 ${nc}">${x.name}${x.name===d.best?' <span class="text-[10px] text-emerald-300">● lowest</span>':''}</td><td>${x.rmse??'-'}</td><td class="${hl?'font-bold text-emerald-400':''}">${x.cost.toFixed(1)}</td><td class="${x.vs_base<0?'text-emerald-400':(x.vs_base>0?'text-rose-400':'')}">${vs}</td><td class="peakCol ${d.city==='seoul'?'hidden':''} ${base?'text-rose-400':''}">${x.peak_under===undefined?'-':x.peak_under+'%'}</td><td>${x.cov}%</td></tr>`;}).join('');
- curBuf=d.rule_applied?d.buffers:d.buffers_raw;if(mode==='buf')drawSub();drawCurve();
-}
-function drawCurve(){const c=S[st.city], r=+$('r_ratio').value, col={'Seasonal Naive':'#f97316','Hour x Weekday Avg':'#a78bfa','Linear Regression':'#94a3b8','Random Forest':'#22d3ee','XGBoost':'#38bdf8'};
- const sets=Object.entries(c.curves).map(([n,v])=>({label:n,data:v.map((y,i)=>({x:c.r_grid[i],y})),borderColor:col[n],pointRadius:0,borderWidth:(n==='XGBoost'||n==='Seasonal Naive')?2.5:1.2,hidden:n==='Hour x Weekday Avg'}));
+ $('alphaInfo').innerHTML=d.rule_applied?`A missing rental costs <span class="num text-white">${d.r.toFixed(2)}×</span> an idle one, so plan at the <span class="num text-white">${d.alpha_pct}%</span> quantile.`:'r ≤ 1: the buffer is off and the mean forecast is used as it is.';
+ $('lblBase').innerText=(d.base==='refit'?'Refitted forecast · ':'Forecast · ')+pad(d.hr)+':00';$('kBase').innerText=fmt(d.base_pred);
+ $('lblBaseSub').innerHTML=d.sel_actual!==null?'Actual demand <span class="num text-amber-300">'+fmt(d.sel_actual)+'</span>':'XGBoost mean forecast';
+ $('kBuf').innerText=(d.buf_val>=0?'+':'')+d.buf_val;$('lblAlpha').innerText=d.rule_applied?d.alpha_pct+'% quantile of validation errors':'Off (r ≤ 1)';
+ $('kPlan').innerText=fmt(d.plan_pred);$('kTot').innerText=fmt(d.plan_total);
+ $('lblSav').innerText='Cost cut · r = '+d.r.toFixed(2);$('kSav').innerText=(d.cost_cut>0?'−':'')+Math.abs(d.cost_cut).toFixed(1)+'%';
+ $('kSav').className='num text-3xl font-semibold '+(d.cost_cut>0?'text-emerald-400':'text-white');
+ $('lblCostSub').innerText=d.xgb_cost.toFixed(1)+' → '+d.buf_cost.toFixed(1)+(d.base==='refit'?' (refit + buffer)':' (XGBoost + buffer)');
+ $('mainTitle').innerText=d.mode==='replay'?'Plan vs. actual demand · '+(d.city==='dc'?'Washington, D.C. · ':'Seoul · ')+d.date:'Forecast vs. cost-optimal capacity plan · what-if';
+ const ds=d.day;$('dayStats').innerText=ds.hours?`Day total ${fmt(ds.actual)} · shortfall ${fmt(ds.short_base)} → ${fmt(ds.short_plan)} · AvgCost ${ds.cost_base} → ${ds.cost_plan}`:`Plan total ${fmt(d.plan_total)} rentals`;
+ cMain.data.datasets[0].data=d.plan_preds;cMain.data.datasets[1].data=d.base_preds;cMain.data.datasets[1].label=d.base==='refit'?'Refitted XGBoost forecast':'XGBoost forecast';
+ cMain.data.datasets[2].data=d.actual;cMain.data.datasets[2].hidden=d.mode!=='replay';cMain.data.datasets[3].data=hrs.map((_,i)=>i===d.hr?d.plan_preds[i]:null);cMain.update('none');
+ $('tblR').innerText='· r = '+d.r.toFixed(2);$('tblSub').innerText=d.city==='dc'?'2,562 test hours · 12 Sep–31 Dec 2012':'1,204 test hours · 24 Sep–30 Nov 2018';
+ $('tbl').innerHTML=d.table.map(x=>{const rc=roleCls[x.group]||'', hl=x.name===d.plan_name;
+  const vs=x.vs_base===0?'—':(x.vs_base>0?'+':'−')+Math.abs(x.vs_base).toFixed(1)+'%';
+  return `<tr class="${hl?'bg-emerald-950/40':''}"><td class="py-2 pr-2 ${hl?'text-emerald-300 font-semibold':'text-slate-200'}">${x.name}${x.name===d.best?' <span class="text-[10.5px] text-emerald-400 font-medium ml-1">lowest</span>':''}</td>
+  <td class="py-2 pr-2"><span class="role ${rc}">${x.group}</span></td><td class="num text-right pl-4 text-slate-300">${x.rmse??'–'}</td>
+  <td class="num text-right pl-4 ${hl?'text-emerald-300 font-semibold':'text-white'}">${x.cost.toFixed(1)}</td>
+  <td class="num text-right pl-4 ${x.vs_base<0?'text-emerald-400':(x.vs_base>0?'text-rose-400':'text-slate-400')}">${vs}</td>
+  <td class="num text-right pl-4 peakCol ${d.city==='seoul'?'hidden':''} text-slate-300">${x.peak_under===undefined?'–':x.peak_under+'%'}</td><td class="num text-right pl-4 text-slate-300">${x.cov}%</td></tr>`;}).join('');
+ curBuf=d.rule_applied?d.buffers:d.buffers_raw;if(sub==='buf')drawSub();drawCurve();}
+function drawCurve(){const c=S[st.city], r=+$('r_ratio').value, col={'Seasonal Naive':'#f97316','Hour x Weekday Avg':'#a78bfa','Linear Regression':'#94a3b8','Random Forest':'#22d3ee','XGBoost':C.pri};
+ const sets=Object.entries(c.curves).map(([n,v])=>({label:n,data:v.map((y,i)=>({x:c.r_grid[i],y})),borderColor:col[n],backgroundColor:col[n],pointRadius:0,borderWidth:(n==='XGBoost'||n==='Seasonal Naive')?2.4:1.2,hidden:n==='Hour x Weekday Avg'}));
  const ymax=Math.max(...Object.entries(c.curves).filter(([n])=>n!=='Hour x Weekday Avg').map(([,v])=>Math.max(...v)));
- sets.push({label:'current r',data:[{x:r,y:0},{x:r,y:ymax}],borderColor:'#10b981',borderDash:[4,4],pointRadius:0,borderWidth:1.5});
- if(c.rstar)sets.push({label:'r* ≈ '+c.rstar.toFixed(2),data:[{x:c.rstar,y:0},{x:c.rstar,y:ymax}],borderColor:'#f43f5e',borderDash:[2,3],pointRadius:0,borderWidth:1.5});
- $('curveNote').innerText=c.rstar?`Re-scoring frozen models: Seasonal Naive becomes cheaper than XGBoost above r* ≈ ${c.rstar.toFixed(2)} on this test block, but r* is unstable (0.5–4 across windows).`:'Seoul: no crossover at any r. XGBoost stays cheaper; its lead narrows as r grows.';
+ sets.push({label:'current r',data:[{x:r,y:0},{x:r,y:ymax}],borderColor:C.plan,backgroundColor:C.plan,borderDash:[4,4],pointRadius:0,borderWidth:1.5});
+ if(c.rstar)sets.push({label:'r* ≈ '+c.rstar.toFixed(2),data:[{x:c.rstar,y:0},{x:c.rstar,y:ymax}],borderColor:C.act,backgroundColor:C.act,borderDash:[2,3],pointRadius:0,borderWidth:1.5});
+ $('curveNote').innerText=c.rstar?`Re-scoring frozen models, Seasonal Naive becomes cheaper than XGBoost above r* ≈ ${c.rstar.toFixed(2)} on this test block, but r* moves between 0.5 and 4 across periods.`:'Seoul: no crossover at any r. XGBoost stays cheaper, and its lead narrows as r grows.';
  if(cCurve)cCurve.destroy();cCurve=new Chart($('cCurve'),{type:'line',data:{datasets:sets},options:{responsive:true,maintainAspectRatio:false,animation:false,parsing:false,
-  scales:{x:{type:'logarithmic',min:0.25,max:10,title:{display:true,text:'cost ratio r (log scale)',color:'#94a3b8'},ticks:{...tick,callback:v=>[0.25,0.5,1,2,5,10].includes(+v)?v:''}},y:{beginAtZero:true,max:Math.ceil(ymax/50)*50,ticks:tick,title:{display:true,text:'AvgCost(r)',color:'#94a3b8'}}},
-  plugins:{legend:{labels:{color:'#cbd5e1',boxWidth:10,font:{size:10}}}}}});}
-function drawStatic(){const g=S.gbfs, shade={id:'shade',beforeDraw(ch){const{ctx,chartArea:a,scales:{x}}=ch;ctx.save();ctx.fillStyle='rgba(148,163,184,.12)';[[7,9],[17,19]].forEach(([s,e])=>{const x0=x.getPixelForValue(s-0.5),x1=x.getPixelForValue(e-0.5);ctx.fillRect(x0,a.top,x1-x0,a.bottom-a.top);});ctx.restore();}};
+  scales:{x:{type:'logarithmic',min:0.25,max:10,grid:{display:false},title:{display:true,text:'cost ratio r (log scale)'},ticks:{callback:v=>[0.25,0.5,1,2,5,10].includes(+v)?v:''}},y:{beginAtZero:true,max:Math.ceil(ymax/50)*50,title:{display:true,text:'AvgCost(r)'}}}}});}
+function drawStatic(){const g=S.gbfs, shade={id:'shade',beforeDraw(ch){const{ctx,chartArea:a,scales:{x}}=ch;ctx.save();ctx.fillStyle='rgba(148,163,184,.10)';[[7,9],[17,19]].forEach(([s,e])=>{const x0=x.getPixelForValue(s-0.5),x1=x.getPixelForValue(e-0.5);ctx.fillRect(x0,a.top,x1-x0,a.bottom-a.top);});ctx.restore();}};
  new Chart($('cGbfs'),{type:'line',plugins:[shade],data:{labels:[...Array(24).keys()],datasets:[
-  {label:'Empty, weekday',data:g.Weekday.empty,borderColor:'#38bdf8',pointRadius:2},{label:'Empty, weekend',data:g.Weekend.empty,borderColor:'#f97316',pointRadius:2},
-  {label:'Full, weekday',data:g.Weekday.full,borderColor:'#38bdf8',borderDash:[4,3],pointRadius:0,hidden:true},{label:'Full, weekend',data:g.Weekend.full,borderColor:'#f97316',borderDash:[4,3],pointRadius:0,hidden:true}]},
-  options:{responsive:true,maintainAspectRatio:false,scales:{x:{type:'linear',min:0,max:23,ticks:tick,title:{display:true,text:'hour of day (Washington time)',color:'#94a3b8'}},y:{ticks:tick,title:{display:true,text:'% of stations',color:'#94a3b8'}}},plugins:{legend:{labels:{color:'#cbd5e1',boxWidth:10,font:{size:10}}}}}});
- $('roll').innerHTML=S.rolling.map(w=>`<tr><td class="py-1.5 text-slate-300">${w.window}</td><td>${w.standard.toFixed(1)}</td><td>${w.refit.toFixed(1)}</td><td>${w.rerank.toFixed(1)}</td><td class="text-emerald-400 font-bold">${w.buffer.toFixed(1)}</td><td class="text-emerald-400">${w.vs_std}%</td><td class="${w.vs_refit>0?'text-rose-400':'text-emerald-400'}">${w.vs_refit>0?'+':''}${w.vs_refit}%</td></tr>`).join('');}
-group('cityBtns',v=>{st.city=v;ui();run();});group('modeBtns',v=>{st.mode=v;ui();run();});group('baseBtns',v=>{st.base=v;run();});
+  {label:'Empty · weekday',data:g.Weekday.empty,borderColor:C.pri,backgroundColor:C.pri,pointRadius:2,borderWidth:2},{label:'Empty · weekend',data:g.Weekend.empty,borderColor:'#f97316',backgroundColor:'#f97316',pointRadius:2,borderWidth:2},
+  {label:'Full · weekday',data:g.Weekday.full,borderColor:C.pri,borderDash:[4,3],pointRadius:0,hidden:true},{label:'Full · weekend',data:g.Weekend.full,borderColor:'#f97316',borderDash:[4,3],pointRadius:0,hidden:true}]},
+  options:{responsive:true,maintainAspectRatio:false,scales:{x:{type:'linear',min:0,max:23,grid:{display:false},ticks:{stepSize:3},title:{display:true,text:'hour of day (Washington time)'}},y:{title:{display:true,text:'% of stations'}}}}});
+ $('roll').innerHTML=S.rolling.map(w=>`<tr><td class="py-2 text-slate-200">${w.window.replace('-','–')}</td><td class="num text-right pl-4 text-slate-300">${w.standard.toFixed(1)}</td><td class="num text-right pl-4 text-slate-300">${w.refit.toFixed(1)}</td><td class="num text-right pl-4 text-slate-300">${w.rerank.toFixed(1)}</td>
+  <td class="num text-right pl-4 text-emerald-300 font-semibold">${w.buffer.toFixed(1)}</td><td class="num text-right pl-4 text-emerald-400">−${Math.abs(w.vs_std)}%</td><td class="num text-right pl-4 ${w.vs_refit>0?'text-rose-400':'text-emerald-400'}">${w.vs_refit>0?'+':'−'}${Math.abs(w.vs_refit)}%</td></tr>`).join('');}
+group('cityBtns',v=>{st.city=v;ui();run();});group('modeBtns',v=>{st.mode=v;ui();run();});group('baseBtns',v=>{st.base=v;run();});group('subBtns',v=>{sub=v;drawSub();});
 sync();ui();drawStatic();run();
 </script></body></html>
 """
