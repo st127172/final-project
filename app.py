@@ -426,9 +426,17 @@ const $=id=>document.getElementById(id), pad=n=>String(n).padStart(2,'0'), hrs=A
 const C={pri:'#3b82f6',plan:'#10b981',buf:'#f59e0b',act:'#f43f5e',grid:'#1e293b',tick:'#94a3b8',txt:'#cbd5e1'};
 Chart.defaults.font.family="'Fira Sans', system-ui, sans-serif";Chart.defaults.font.size=11;Chart.defaults.color=C.tick;Chart.defaults.borderColor=C.grid;
 Chart.defaults.plugins.legend.labels.boxWidth=10;Chart.defaults.plugins.legend.labels.boxHeight=10;Chart.defaults.plugins.legend.labels.color=C.txt;
+function legendIcon(color,hidden){const c=document.createElement('canvas'),k=window.devicePixelRatio||1,n=12;c.width=n*k;c.height=n*k;c.style.width=n+'px';c.style.height=n+'px';
+ const x=c.getContext('2d');x.scale(k,k);x.strokeStyle=hidden?'#64748b':color;x.lineWidth=2;x.lineCap='round';
+ if(hidden){x.beginPath();x.moveTo(2,2);x.lineTo(10,10);x.moveTo(10,2);x.lineTo(2,10);x.stroke();}else{x.strokeRect(1.5,1.5,9,9);}return c;}
+Chart.defaults.plugins.legend.labels.usePointStyle=true;
+Chart.defaults.plugins.legend.labels.generateLabels=function(chart){return chart.data.datasets.map((ds,i)=>{const vis=chart.isDatasetVisible(i), col=typeof ds.borderColor==='string'?ds.borderColor:C.pri;
+ return {text:ds.label,datasetIndex:i,hidden:false,pointStyle:legendIcon(col,!vis),fontColor:vis?C.txt:'#64748b',lineWidth:0,strokeStyle:'transparent',fillStyle:'transparent'};});};
+Chart.defaults.plugins.legend.labels.filter=(item,data)=>!data.datasets[item.datasetIndex].legendOff;
+Chart.defaults.plugins.legend.onClick=function(e,item,legend){const ch=legend.chart,i=item.datasetIndex;ch.isDatasetVisible(i)?ch.hide(i):ch.show(i);const ds=ch.data.datasets[i];if(ch.$keep)ch.$keep[ds.label]=!ch.isDatasetVisible(i);};
 Chart.defaults.plugins.tooltip.backgroundColor='#0b1220';Chart.defaults.plugins.tooltip.borderColor='#334155';Chart.defaults.plugins.tooltip.borderWidth=1;
 const st={city:'dc',mode:'whatif',base:'train'};
-let tmr=null, sub='buf', curBuf=[], cSub=null, cCurve=null, last=null;
+const curveKeep={};let tmr=null, sub='buf', curBuf=[], cSub=null, cCurve=null, last=null;
 const fmt=v=>v===null||v===undefined?'–':Math.round(v).toLocaleString();
 const cMain=new Chart($('cMain'),{type:'line',data:{labels:hrs,datasets:[
  {label:'Recommended plan',data:[],borderColor:C.plan,backgroundColor:'rgba(16,185,129,0.14)',borderWidth:2,borderDash:[6,4],fill:1,tension:0.3,pointRadius:0},
@@ -471,7 +479,7 @@ async function run(){
  $('mainTitle').innerText=d.mode==='replay'?'Plan vs. actual demand · '+(d.city==='dc'?'Washington, D.C. · ':'Seoul · ')+d.date:'Forecast vs. cost-optimal capacity plan · what-if';
  const ds=d.day;$('dayStats').innerText=ds.hours?`Day total ${fmt(ds.actual)} · shortfall ${fmt(ds.short_base)} → ${fmt(ds.short_plan)} · AvgCost ${ds.cost_base} → ${ds.cost_plan}`:`Plan total ${fmt(d.plan_total)} rentals`;
  cMain.data.datasets[0].data=d.plan_preds;cMain.data.datasets[1].data=d.base_preds;cMain.data.datasets[1].label=d.base==='refit'?'Refitted XGBoost forecast':'XGBoost forecast';
- cMain.data.datasets[2].data=d.actual;cMain.data.datasets[2].hidden=d.mode!=='replay';cMain.data.datasets[3].data=hrs.map((_,i)=>i===d.hr?d.plan_preds[i]:null);cMain.update('none');
+ cMain.data.datasets[2].data=d.actual;cMain.data.datasets[2].hidden=d.mode!=='replay';cMain.data.datasets[2].legendOff=d.mode!=='replay';cMain.data.datasets[3].data=hrs.map((_,i)=>i===d.hr?d.plan_preds[i]:null);cMain.update('none');
  $('tblR').innerText='· r = '+d.r.toFixed(2);$('tblSub').innerText=d.city==='dc'?'2,562 test hours · 12 Sep–31 Dec 2012':'1,204 test hours · 24 Sep–30 Nov 2018';
  $('tbl').innerHTML=d.table.map(x=>{const rc=roleCls[x.group]||'', hl=x.name===d.plan_name;
   const vs=x.vs_base===0?'—':(x.vs_base>0?'+':'−')+Math.abs(x.vs_base).toFixed(1)+'%';
@@ -482,13 +490,13 @@ async function run(){
   <td class="num text-right pl-4 peakCol ${d.city==='seoul'?'hidden':''} text-slate-300">${x.peak_under===undefined?'–':x.peak_under+'%'}</td><td class="num text-right pl-4 text-slate-300">${x.cov}%</td></tr>`;}).join('');
  curBuf=d.rule_applied?d.buffers:d.buffers_raw;if(sub==='buf')drawSub();drawCurve();}
 function drawCurve(){const c=S[st.city], r=+$('r_ratio').value, col={'Seasonal Naive':'#f97316','Hour x Weekday Avg':'#a78bfa','Linear Regression':'#94a3b8','Random Forest':'#22d3ee','XGBoost':C.pri};
- const sets=Object.entries(c.curves).map(([n,v])=>({label:n,data:v.map((y,i)=>({x:c.r_grid[i],y})),borderColor:col[n],backgroundColor:col[n],pointRadius:0,borderWidth:(n==='XGBoost'||n==='Seasonal Naive')?2.4:1.2,hidden:n==='Hour x Weekday Avg'}));
+ const sets=Object.entries(c.curves).map(([n,v])=>({label:n,data:v.map((y,i)=>({x:c.r_grid[i],y})),borderColor:col[n],backgroundColor:col[n],pointRadius:0,borderWidth:(n==='XGBoost'||n==='Seasonal Naive')?2.4:1.2,hidden:(n in curveKeep)?curveKeep[n]:n==='Hour x Weekday Avg'}));
  const ymax=Math.max(...Object.entries(c.curves).filter(([n])=>n!=='Hour x Weekday Avg').map(([,v])=>Math.max(...v)));
  sets.push({label:'current r',data:[{x:r,y:0},{x:r,y:ymax}],borderColor:C.plan,backgroundColor:C.plan,borderDash:[4,4],pointRadius:0,borderWidth:1.5});
  if(c.rstar)sets.push({label:'r* ≈ '+c.rstar.toFixed(2),data:[{x:c.rstar,y:0},{x:c.rstar,y:ymax}],borderColor:C.act,backgroundColor:C.act,borderDash:[2,3],pointRadius:0,borderWidth:1.5});
  $('curveNote').innerText=c.rstar?`Re-scoring frozen models, Seasonal Naive becomes cheaper than XGBoost above r* ≈ ${c.rstar.toFixed(2)} on this test block, but r* moves between 0.5 and 4 across periods.`:'Seoul: no crossover at any r. XGBoost stays cheaper, and its lead narrows as r grows.';
- if(cCurve)cCurve.destroy();cCurve=new Chart($('cCurve'),{type:'line',data:{datasets:sets},options:{responsive:true,maintainAspectRatio:false,animation:false,parsing:false,
-  scales:{x:{type:'logarithmic',min:0.25,max:10,grid:{display:false},title:{display:true,text:'cost ratio r (log scale)'},ticks:{callback:v=>[0.25,0.5,1,2,5,10].includes(+v)?v:''}},y:{beginAtZero:true,max:Math.ceil(ymax/50)*50,title:{display:true,text:'AvgCost(r)'}}}}});}
+ if(cCurve)cCurve.destroy();sets.forEach(x=>{if(x.label in curveKeep&&!(x.label in c.curves))x.hidden=curveKeep[x.label];});cCurve=new Chart($('cCurve'),{type:'line',data:{datasets:sets},options:{responsive:true,maintainAspectRatio:false,animation:false,parsing:false,
+  scales:{x:{type:'logarithmic',min:0.25,max:10,grid:{display:false},title:{display:true,text:'cost ratio r (log scale)'},ticks:{callback:v=>[0.25,0.5,1,2,5,10].includes(+v)?v:''}},y:{beginAtZero:true,max:Math.ceil(ymax/50)*50,title:{display:true,text:'AvgCost(r)'}}}}});cCurve.$keep=curveKeep;}
 function drawStatic(){const g=S.gbfs, shade={id:'shade',beforeDraw(ch){const{ctx,chartArea:a,scales:{x}}=ch;ctx.save();ctx.fillStyle='rgba(148,163,184,.10)';[[7,9],[17,19]].forEach(([s,e])=>{const x0=x.getPixelForValue(s-0.5),x1=x.getPixelForValue(e-0.5);ctx.fillRect(x0,a.top,x1-x0,a.bottom-a.top);});ctx.restore();}};
  new Chart($('cGbfs'),{type:'line',plugins:[shade],data:{labels:[...Array(24).keys()],datasets:[
   {label:'Empty · weekday',data:g.Weekday.empty,borderColor:C.pri,backgroundColor:C.pri,pointRadius:2,borderWidth:2},{label:'Empty · weekend',data:g.Weekend.empty,borderColor:'#f97316',backgroundColor:'#f97316',pointRadius:2,borderWidth:2},
