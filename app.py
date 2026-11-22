@@ -427,8 +427,8 @@ const C={pri:'#3b82f6',plan:'#10b981',buf:'#f59e0b',act:'#f43f5e',grid:'#1e293b'
 Chart.defaults.font.family="'Fira Sans', system-ui, sans-serif";Chart.defaults.font.size=11;Chart.defaults.color=C.tick;Chart.defaults.borderColor=C.grid;
 Chart.defaults.plugins.legend.labels.boxWidth=10;Chart.defaults.plugins.legend.labels.boxHeight=10;Chart.defaults.plugins.legend.labels.color=C.txt;
 function legendIcon(color,hidden){const c=document.createElement('canvas'),k=window.devicePixelRatio||1,n=12;c.width=n*k;c.height=n*k;c.style.width=n+'px';c.style.height=n+'px';
- const x=c.getContext('2d');x.scale(k,k);x.strokeStyle=hidden?'#64748b':color;x.lineWidth=2;x.lineCap='round';
- if(hidden){x.beginPath();x.moveTo(2,2);x.lineTo(10,10);x.moveTo(10,2);x.lineTo(2,10);x.stroke();}else{x.strokeRect(1.5,1.5,9,9);}return c;}
+ const x=c.getContext('2d');x.scale(k,k);x.strokeStyle=color;x.lineWidth=1.75;x.lineCap='round';x.strokeRect(1.5,1.5,9,9);
+ if(hidden){x.lineWidth=1.5;x.beginPath();x.moveTo(4,4);x.lineTo(8,8);x.moveTo(8,4);x.lineTo(4,8);x.stroke();}return c;}
 Chart.defaults.plugins.legend.labels.usePointStyle=true;
 Chart.defaults.plugins.legend.labels.generateLabels=function(chart){return chart.data.datasets.map((ds,i)=>{const vis=chart.isDatasetVisible(i), col=typeof ds.borderColor==='string'?ds.borderColor:C.pri;
  return {text:ds.label,datasetIndex:i,hidden:false,pointStyle:legendIcon(col,!vis),fontColor:vis?C.txt:'#64748b',lineWidth:0,strokeStyle:'transparent',fillStyle:'transparent'};});};
